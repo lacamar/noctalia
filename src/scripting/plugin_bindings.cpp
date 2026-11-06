@@ -205,6 +205,13 @@ namespace {
     return 0;
   }
 
+  int luau_setBusy(lua_State* L) {
+    if (auto* context = getContext(L)) {
+      context->patch.busy = lua_toboolean(L, 1) != 0;
+    }
+    return 0;
+  }
+
   int luau_isVertical(lua_State* L) {
     auto* context = getContext(L);
     lua_pushboolean(L, context != nullptr && context->snapshot.isVertical ? 1 : 0);
@@ -242,6 +249,7 @@ namespace {
       {"setFont", luau_setFont},
       {"setColor", luau_setColor},
       {"setGlyphColor", luau_setGlyphColor},
+      {"setBusy", luau_setBusy},
       {"isVertical", luau_isVertical},
       {"outputName", luau_outputName},
       {"setVisible", luau_setVisible},

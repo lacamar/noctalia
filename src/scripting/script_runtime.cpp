@@ -96,6 +96,9 @@ namespace scripting {
       if (src.glyphColor.has_value()) {
         dest.glyphColor = src.glyphColor;
       }
+      if (src.busy.has_value()) {
+        dest.busy = src.busy;
+      }
       if (src.visible.has_value()) {
         dest.visible = src.visible;
       }

@@ -27,6 +27,7 @@
 #include "ui/controls/separator.h"
 #include "ui/controls/slider.h"
 #include "ui/controls/spacer.h"
+#include "ui/controls/spinner.h"
 #include "ui/controls/toggle.h"
 #include "ui/drag_drop_controller.h"
 #include "ui/palette.h"
@@ -515,6 +516,7 @@ namespace ui {
       static const std::unordered_set<std::string> kProgress = {"width",   "height",   "flexGrow",   "opacity",
                                                                 "visible", "progress", "fill",       "track",
                                                                 "radius",  "marker",   "markerColor"};
+      static const std::unordered_set<std::string> kSpinner = {"opacity", "visible", "color", "size"};
       static const std::unordered_set<std::string> kButton = {"width",       "height",  "flexGrow",     "opacity",
                                                               "visible",     "text",    "glyph",        "fontSize",
                                                               "glyphSize",   "variant", "contentAlign", "enabled",
@@ -583,6 +585,9 @@ namespace ui {
       }
       if (type == "progress") {
         return kProgress;
+      }
+      if (type == "spinner") {
+        return kSpinner;
       }
       if (type == "button") {
         return kButton;
@@ -767,6 +772,9 @@ namespace ui {
     }
     if (desired.type == "progress") {
       return std::make_unique<ProgressBar>();
+    }
+    if (desired.type == "spinner") {
+      return std::make_unique<Spinner>();
     }
     if (desired.type == "button") {
       return std::make_unique<Button>();
@@ -1753,6 +1761,25 @@ namespace ui {
         } else {
           kLog.warn("ui tree: separator has unknown orientation '{}'", *orientation);
         }
+      }
+      return;
+    }
+
+    if (desired.type == "spinner") {
+      auto* spinner = static_cast<Spinner*>(node);
+      const double* size = numProp(desired, "size");
+      spinner->setSpinnerSize(size != nullptr ? scaled(*size) : Style::baseGlyphSize * m_scale);
+      if (auto color = parseColor(desired, "color")) {
+        spinner->setColor(*color);
+      } else {
+        spinner->setColor(colorSpecFromRole(ColorRole::Primary));
+      }
+      const bool* visible = boolProp(desired, "visible");
+      const bool shown = visible == nullptr || *visible;
+      if (shown && !spinner->spinning()) {
+        spinner->start();
+      } else if (!shown && spinner->spinning()) {
+        spinner->stop();
       }
       return;
     }

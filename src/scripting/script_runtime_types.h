@@ -118,6 +118,7 @@ namespace scripting {
     std::optional<std::string> fontBaseline;
     std::optional<ScriptColorPatch> textColor;
     std::optional<ScriptColorPatch> glyphColor;
+    std::optional<bool> busy;
     std::optional<bool> visible;
     std::optional<int> updateIntervalMs;
 
@@ -150,6 +151,7 @@ namespace scripting {
           && !fontBaseline.has_value()
           && !textColor.has_value()
           && !glyphColor.has_value()
+          && !busy.has_value()
           && !visible.has_value()
           && !updateIntervalMs.has_value()
           && !label.has_value()

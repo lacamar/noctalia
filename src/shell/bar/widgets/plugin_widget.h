@@ -23,6 +23,7 @@
 
 class Flex;
 class Glyph;
+class Spinner;
 class Image;
 class InputArea;
 class Label;
@@ -55,6 +56,7 @@ public:
   void luaSetFont(std::string_view family, std::string_view baseline);
   void luaSetColor(std::string_view role, std::string_view mode);
   void luaSetGlyphColor(std::string_view role, std::string_view mode);
+  void luaSetBusy(bool busy);
   void luaSetVisible(bool visible);
   void luaSetUpdateInterval(float ms);
   void setUpdateDeferralCallback(std::function<bool()> callback);
@@ -144,6 +146,7 @@ private:
   InputArea* m_area = nullptr;
   Flex* m_flex = nullptr;
   Glyph* m_glyph = nullptr;
+  Spinner* m_spinner = nullptr;
   Image* m_image = nullptr;
   Label* m_label = nullptr;
   // Declarative mode: barWidget.render(tree) reconciles into m_uiHost and hides

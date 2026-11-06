@@ -10,6 +10,7 @@
 #include "render/scene/input_area.h"
 #include "render/scene/node.h"
 #include "ui/builders.h"
+#include "ui/controls/spinner.h"
 #include "ui/palette.h"
 #include "ui/style.h"
 
@@ -215,6 +216,13 @@ void PluginWidget::create() {
   );
 
   flex->addChild(
+      ui::spinner({
+          .out = &m_spinner,
+          .visible = false,
+      })
+  );
+
+  flex->addChild(
       ui::image({
           .out = &m_image,
           .fit = ImageFit::Contain,
@@ -380,7 +388,12 @@ void PluginWidget::doLayout(Renderer& renderer, float containerWidth, float cont
     m_label->measure(renderer);
   }
 
-  if (m_glyphVisible) {
+  const bool busy = m_spinner->visible();
+  m_glyph->setVisible(m_glyphVisible && !busy);
+  if (busy) {
+    m_spinner->setColor(resolveScriptColor(m_glyphColor, widgetIconColorOr(fallback)));
+    m_spinner->setSpinnerSize(Style::baseGlyphSize * 0.8F * m_contentScale);
+  } else if (m_glyphVisible) {
     m_glyph->setColor(resolveScriptColor(m_glyphColor, widgetIconColorOr(fallback)));
     m_glyph->measure(renderer);
   }
@@ -529,6 +542,18 @@ void PluginWidget::luaSetGlyphColor(std::string_view role, std::string_view mode
     m_glyphColor = next;
     m_dirty = true;
   }
+}
+
+void PluginWidget::luaSetBusy(bool busy) {
+  if (m_spinner == nullptr || m_spinner->visible() == busy)
+    return;
+  m_spinner->setVisible(busy);
+  if (busy) {
+    m_spinner->start();
+  } else {
+    m_spinner->stop();
+  }
+  m_dirty = true;
 }
 
 void PluginWidget::luaSetUpdateInterval(float ms) {
@@ -699,11 +724,12 @@ void PluginWidget::applyScriptPatch(const scripting::ScriptPatch& patch) {
       || patch.image.has_value()
       || patch.fontFamily.has_value()
       || patch.textColor.has_value()
-      || patch.glyphColor.has_value();
+      || patch.glyphColor.has_value()
+      || patch.busy.has_value();
   if (m_tree.has_value() && imperativeContent && !m_warnedImperativeWhileDeclarative) {
     m_warnedImperativeWhileDeclarative = true;
     kLog.warn(
-        "plugin widget '{}': setText/setGlyph/setImage/setFont/setColor have no visible effect while a render() tree "
+        "plugin widget '{}': setText/setGlyph/setImage/setFont/setColor/setBusy have no visible effect while a render() tree "
         "is active",
         m_entryId
     );
@@ -728,6 +754,9 @@ void PluginWidget::applyScriptPatch(const scripting::ScriptPatch& patch) {
   }
   if (patch.glyphColor.has_value()) {
     luaSetGlyphColor(patch.glyphColor->role, patch.glyphColor->mode);
+  }
+  if (patch.busy.has_value()) {
+    luaSetBusy(*patch.busy);
   }
   if (patch.visible.has_value()) {
     luaSetVisible(*patch.visible);
@@ -897,6 +926,7 @@ void PluginWidget::reloadScript() {
   m_imageReloadRetries = 0;
   if (m_glyph)
     m_glyph->setVisible(false);
+  luaSetBusy(false);
   if (m_image)
     m_image->setVisible(false);
   if (m_label) {
